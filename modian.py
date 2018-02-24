@@ -1,15 +1,18 @@
 # coding=gbk
 import time
 import urllib.request
-
+import urllib3
+import requests
 import lxml
 from lxml import html
 from lxml import etree
 import websocket
 import json
+import socket
 import hashlib
 import importlib,sys
 import operator
+
 importlib.reload(sys)
 
 url = "https://zhongchou.modian.com/item/10780.html"
@@ -91,7 +94,11 @@ def details(proId):
     the_page = response.read().decode("utf-8")
     djson = json.loads(the_page)
     return djson
-
+def sendMsg(msg):
+    par = {'group_id':543392670,'message':msg}
+    r = requests.get("http://localhost:5700/send_group_msg", params=par)
+    djson = ''
+    return msg
 
 last = ""
 while 1 == 1:
@@ -109,20 +116,24 @@ while 1 == 1:
             if operator.eq(name,key['nickname']):
                 rank = key['rank']
                 break
-        ws = websocket.create_connection("ws://127.0.0.1:25303")
-        strs += name + '刚刚在摩点集了' + str(money) + '元\\n'
+        #ws = websocket.WebSocket()
+       # ws = websocket.create_connection("ws://echo.websocket.org/",sockopt = ((socket.IPPROTO_TCP, socket.TCP_NODELAY),) )
+
+        #ws = websocket.create_connection("ws://localhost:25304",header=["User-Agent: MyProgram","x-custom: header"])
+        strs += name + '刚刚在摩点集了' + str(money) + '元\n'
         strs += '目前排名：'+ str(rank)
-        strs += '\\n感谢这位聚聚对苞谷GNZ48生诞的支持\\n'
+        strs += '\n感谢这位聚聚对苞谷GNZ48生诞的支持\n'
         strs += '摩点链接：'+ url
-        strs += '\\n目前已集' + str(details(pro_id)['data'][0]['already_raised']) + '元\\n'
+        strs += '\n目前已集' + str(details(pro_id)['data'][0]['already_raised']) + '元\n'
         strs += '目标：' + details(pro_id)['data'][0]['goal'] + "元"
         print (strs)
         msg = "{\"act\":\"101\", \"groupid\": \"672838364\", \"msg\": \"" + strs + "\"}"
-        ws.send(msg)
+        sendMsg(strs)
+      #  ws.send(msg)
         print ("Sent")
-        ws.close()
+      #  ws.close()
         last = name
 
-    time.sleep(1)
+    time.sleep(5)
 
 
