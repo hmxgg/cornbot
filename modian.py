@@ -6,17 +6,18 @@ import requests
 import lxml
 from lxml import html
 from lxml import etree
-import websocket
 import json
 import socket
 import hashlib
 import importlib,sys
 import operator
+import time, os, sched
 
 importlib.reload(sys)
 
 url = "https://zhongchou.modian.com/item/10780.html"
 pro_id = 10780
+last='d'
 def genarate_sign(params):
     d = urllib.parse.urlencode(params)
     d += "&p=das41aq6"
@@ -100,14 +101,16 @@ def sendMsg(msg):
     djson = ''
     return msg
 
-last = ""
-while 1 == 1:
+
+def main():
+
     datajson = orders(pro_id)
     name = datajson['data'][0]['nickname']
     strs = ""
     money = datajson['data'][0]['backer_money']
+    global last
     if name == last:
-        print("wait");
+        i =1
     else:
         last = str;
         ranklist = jujurank(pro_id,name)['data']
@@ -134,6 +137,26 @@ while 1 == 1:
       #  ws.close()
         last = name
 
-    time.sleep(5)
+schedule = sched.scheduler(time.time, time.sleep)
 
+
+def perform_command(cmd, inc):
+    # 安排inc秒后再次运行自己，即周期运行
+    schedule.enter(inc, 0, perform_command, (cmd, inc))
+    try:
+        main()
+    except Exception as err:
+        print(err)
+
+
+
+def timming_exe(cmd, inc=60):
+    # enter用来安排某事件的发生时间，从现在起第n秒开始启动
+    schedule.enter(inc, 0, perform_command, (cmd, inc))
+    # 持续运行，直到计划时间队列变成空为止
+    schedule.run()
+
+last='d'
+print("start:")
+timming_exe("echo %time%", 5)
 
